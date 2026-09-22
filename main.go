@@ -1,9 +1,12 @@
 package main
 
 import (
+	"crypto/rand"
 	"errors"
 	"time"
 )
+
+const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:',.<>?/~`"
 
 type Password struct {
 	Name         string    `json:"name"`
@@ -79,6 +82,25 @@ func (pm *PasswordManager) ListPasswords() []Password {
 	}
 
 	return passwords
+}
+
+func (pm *PasswordManager) GeneratePassword(length int) (string, error) {
+	if length < 8 {
+		return "", errors.New("password is too weak")
+	}
+
+	buf := make([]byte, length)
+	if _, err := rand.Read(buf); err != nil {
+		return "", err
+	}
+
+	password := make([]byte, length)
+
+	for i, b := range buf {
+		password[i] = charset[int(b)%len(charset)]
+	}
+
+	return string(password), nil
 }
 
 func main() {
