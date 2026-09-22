@@ -267,6 +267,20 @@ func (pm *PasswordManager) FindDuplicatePasswords() map[string][]string {
 	return result
 }
 
+func (pm *PasswordManager) UpdatePassword(name, newValue string) error {
+	value, ok := pm.passwords[name]
+	if !ok {
+		return errors.New("password not found")
+	}
+	if err := pm.CheckPasswordStrength(newValue); err != nil {
+		return err
+	}
+	value.Value = newValue
+	value.LastModified = time.Now()
+	pm.passwords[name] = value
+	return nil
+}
+
 func main() {
 
 }
