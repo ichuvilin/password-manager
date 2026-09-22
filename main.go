@@ -380,7 +380,7 @@ func waitForEnter() {
 }
 
 func ReadUserInput(prompt string) string {
-	fmt.Print("Enter name: ")
+	fmt.Print(prompt)
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')
 	return strings.TrimSpace(input)
