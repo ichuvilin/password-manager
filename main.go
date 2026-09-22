@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -17,6 +19,11 @@ const (
 	upperLatter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	digit       = "0123456789"
 	special     = "!@#$%^&*()-_=+[]{}|;:',.<>?/~`"
+
+	colorRed    = "\033[31m"
+	colorGreen  = "\033[32m"
+	colorYellow = "\033[33m"
+	colorReset  = "\033[0m"
 )
 
 type Password struct {
@@ -345,6 +352,29 @@ func (pm *PasswordManager) GetPasswordStats() map[string]interface{} {
 	result["newest"] = maxCreatedAt
 
 	return result
+}
+
+func clearScreen() {
+	fmt.Print("\033[H\033[2J")
+}
+
+func showSuccess(message string) {
+	fmt.Printf("%s✓ Success: %s%s\n", colorGreen, message, colorReset)
+}
+
+func showError(message string) {
+	fmt.Printf("%s✗ Error: %s%s\n", colorRed, message, colorReset)
+}
+
+func showInfo(message string) {
+	fmt.Printf("%s→ Info: %s%s\n", colorYellow, message, colorReset)
+}
+
+func waitForEnter() {
+	fmt.Print("\nPress Enter to continue...")
+
+	reader := bufio.NewReader(os.Stdin)
+	_, _ = reader.ReadString('\n')
 }
 
 func main() {
