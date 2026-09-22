@@ -1,6 +1,9 @@
 package main
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type Password struct {
 	Name         string    `json:"name"`
@@ -27,6 +30,18 @@ func NewPasswordManager(filePath string) *PasswordManager {
 
 func NewPassword(name, value, category string) Password {
 	return Password{Name: name, Value: value, Category: category, CreatedAt: time.Now(), LastModified: time.Now()}
+}
+
+func (pm *PasswordManager) SetMasterPassword(masterPassword string) error {
+	if masterPassword == "" || len(masterPassword) < 8 {
+		return errors.New("password is too weak")
+	}
+	buf := make([]byte, 32)
+	copy(buf, []byte(masterPassword))
+
+	pm.masterKey = buf
+	pm.isInitialized = true
+	return nil
 }
 
 func main() {
