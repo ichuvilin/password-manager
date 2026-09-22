@@ -11,17 +11,17 @@ type Password struct {
 }
 
 type PasswordManager struct {
-	passwords    map[string]Password `json:"passwords"`
-	masterKey    []byte              `json:"masterKey"`
-	filePath     string              `json:"file_path"`
-	isInitialize bool                `json:"-"`
+	passwords     map[string]Password `json:"passwords"`
+	masterKey     []byte              `json:"-"`
+	filePath      string              `json:"-"`
+	isInitialized bool                `json:"-"`
 }
 
-func NewPasswordManage(filePath string) *PasswordManager {
+func NewPasswordManager(filePath string) *PasswordManager {
 	return &PasswordManager{
-		passwords:    make(map[string]Password),
-		filePath:     filePath,
-		isInitialize: false,
+		passwords:     make(map[string]Password),
+		filePath:      filePath,
+		isInitialized: false,
 	}
 }
 
