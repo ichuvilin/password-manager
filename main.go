@@ -8,10 +8,16 @@ import (
 	"errors"
 	"io"
 	"os"
+	"strings"
 	"time"
 )
 
-const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:',.<>?/~`"
+const (
+	lowerLatter = "abcdefghijklmnopqrstuvwxyz"
+	upperLatter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	digit       = "0123456789"
+	special     = "!@#$%^&*()-_=+[]{}|;:',.<>?/~`"
+)
 
 type Password struct {
 	Name         string    `json:"name"`
@@ -57,6 +63,10 @@ func (pm *PasswordManager) SavePassword(name, value, category string) error {
 		return errors.New("password manager not initialized")
 	}
 
+	if err := pm.CheckPasswordStrength(value); err != nil {
+		return err
+	}
+
 	_, ok := pm.passwords[name]
 	if ok {
 		return errors.New("password already exists")
@@ -98,6 +108,8 @@ func (pm *PasswordManager) GeneratePassword(length int) (string, error) {
 	if _, err := rand.Read(buf); err != nil {
 		return "", err
 	}
+
+	charset := lowerLatter + upperLatter + digit + special
 
 	password := make([]byte, length)
 
@@ -190,6 +202,38 @@ func (pm *PasswordManager) LoadFromFile() error {
 
 	if err := json.Unmarshal(decryptedData, &pm.passwords); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (pm *PasswordManager) CheckPasswordStrength(password string) error {
+	var (
+		hasUpper   bool
+		hasLower   bool
+		hasDigit   bool
+		hasSpecial bool
+	)
+
+	if len(password) < 8 {
+		return errors.New("password is too weak")
+	}
+
+	for _, r := range password {
+		switch {
+		case r >= 'A' && r <= 'Z':
+			hasUpper = true
+		case r >= 'a' && r <= 'z':
+			hasLower = true
+		case r >= '0' && r <= '9':
+			hasDigit = true
+		case strings.ContainsRune(special, r):
+			hasSpecial = true
+		}
+	}
+
+	if !hasUpper || !hasLower || !hasDigit || !hasSpecial {
+		return errors.New("password must contain uppercase, lowercase, digit and special character")
 	}
 
 	return nil
