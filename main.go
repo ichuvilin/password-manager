@@ -152,6 +152,49 @@ func (pm *PasswordManager) SaveToFile() error {
 	return nil
 }
 
+func (pm *PasswordManager) LoadFromFile() error {
+	if !pm.isInitialized {
+		return errors.New("password manager not initialized")
+	}
+	file, err := os.Open(pm.filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	block, err := aes.NewCipher(pm.masterKey)
+	if err != nil {
+		return err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return err
+	}
+
+	nonce := make([]byte, gcm.NonceSize())
+
+	if _, err := io.ReadFull(file, nonce); err != nil {
+		return err
+	}
+
+	encryptedData, err := io.ReadAll(file)
+	if err != nil {
+		return err
+	}
+
+	decryptedData, err := gcm.Open(nil, nonce, encryptedData, nil)
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(decryptedData, &pm.passwords); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func main() {
 
 }
