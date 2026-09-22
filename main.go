@@ -10,6 +10,21 @@ type Password struct {
 	LastModified time.Time `json:"last_modified"`
 }
 
+type PasswordManager struct {
+	passwords    map[string]Password `json:"passwords"`
+	masterKey    []byte              `json:"masterKey"`
+	filePath     string              `json:"file_path"`
+	isInitialize bool                `json:"-"`
+}
+
+func NewPasswordManage(filePath string) *PasswordManager {
+	return &PasswordManager{
+		passwords:    make(map[string]Password),
+		filePath:     filePath,
+		isInitialize: false,
+	}
+}
+
 func NewPassword(name, value, category string) Password {
 	return Password{Name: name, Value: value, Category: category, CreatedAt: time.Now(), LastModified: time.Now()}
 }
