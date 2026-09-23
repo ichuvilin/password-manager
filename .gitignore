@@ -1,2 +1,38 @@
-.idea
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.out
+
+# Go build artifacts
+/bin/
+/dist/
+/build/
+
+# Test artifacts
+*.test
+coverage.out
+coverage.html
+
+# Application data
+*.dat
+
+# IDE
+.idea/
+.vscode/
 *.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Temporary files
+*.tmp
+*.log
