@@ -449,16 +449,7 @@ Last Modified: %s
 func HandlePasswordGeneration(pm *PasswordManager) error {
 	clearScreen()
 	fmt.Println("=== Password Generation ===")
-	fmt.Print("Enter password length (min 8): ")
-	reader := bufio.NewReader(os.Stdin)
-
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		showError(err.Error())
-		return err
-	}
-	strLength := strings.TrimSpace(input)
-	length, err := strconv.Atoi(strLength)
+	length, err := strconv.Atoi(ReadUserInput("Enter password length (min 8): "))
 	if err != nil {
 		showError(err.Error())
 		return err
@@ -477,24 +468,11 @@ func HandlePasswordGeneration(pm *PasswordManager) error {
 func HandlePasswordAdd(pm *PasswordManager) error {
 	clearScreen()
 	fmt.Println("=== Add New Password ===")
-	fmt.Printf("Enter service name: ")
-	reader := bufio.NewReader(os.Stdin)
-
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		showError(err.Error())
-		return err
-	}
-	srvName := strings.TrimSpace(input)
-
-	fmt.Printf("Enter password (or press Enter to generate):")
-	input, err = reader.ReadString('\n')
-	if err != nil {
-		showError(err.Error())
-		return err
-	}
-	passwd := strings.TrimSpace(input)
+	srvName := ReadUserInput("Enter service name: ")
+	passwd := ReadUserInput("Enter password (or press Enter to generate):")
 	if passwd == "" {
+		var err error
+
 		passwd, err = pm.GeneratePassword(12)
 		if err != nil {
 			showError(err.Error())
@@ -503,15 +481,8 @@ func HandlePasswordAdd(pm *PasswordManager) error {
 		showInfo(fmt.Sprintf("Generated password: %s", passwd))
 	}
 
-	fmt.Printf("Enter category: ")
-	input, err = reader.ReadString('\n')
-	if err != nil {
-		showError(err.Error())
-		return err
-	}
-	category := strings.TrimSpace(input)
-
-	err = pm.SavePassword(srvName, passwd, category)
+	category := ReadUserInput("Enter category: ")
+	err := pm.SavePassword(srvName, passwd, category)
 	if err != nil {
 		showError(err.Error())
 		return err
@@ -524,15 +495,7 @@ func HandlePasswordAdd(pm *PasswordManager) error {
 func HandlePasswordSearch(pm *PasswordManager) error {
 	clearScreen()
 	fmt.Println("=== Search Password ===")
-	fmt.Printf("Enter service name: ")
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		showError(err.Error())
-		return err
-	}
-	srvName := strings.TrimSpace(input)
-
+	srvName := ReadUserInput("Enter service name: ")
 	password, err := pm.GetPassword(srvName)
 	if err != nil {
 		showError(err.Error())
@@ -546,23 +509,10 @@ func HandlePasswordSearch(pm *PasswordManager) error {
 func HandlePasswordUpdate(pm *PasswordManager) error {
 	clearScreen()
 	fmt.Println("=== Update Password ===")
-	fmt.Printf("Enter service name: ")
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		showError(err.Error())
-		return err
-	}
-	srvName := strings.TrimSpace(input)
+	srvName := ReadUserInput("Enter service name: ")
+	passwd := ReadUserInput("Enter new password: ")
 
-	fmt.Printf("Enter new password: ")
-	input, err = reader.ReadString('\n')
-	if err != nil {
-		showError(err.Error())
-		return err
-	}
-	passwd := strings.TrimSpace(input)
-	err = pm.UpdatePassword(srvName, passwd)
+	err := pm.UpdatePassword(srvName, passwd)
 	if err != nil {
 		showError(err.Error())
 		return err
@@ -587,6 +537,89 @@ func HandleExitAndSave(pm *PasswordManager) error {
 	return nil
 }
 
-func main() {
+func HandleListPasswords(pm *PasswordManager) {
+	passwords := pm.ListPasswords()
+	PrintPasswordList(passwords)
+}
 
+func HandleDeletePassword(pm *PasswordManager) error {
+	passwdName := ReadUserInput("Enter password name: ")
+	if err := pm.DeletePassword(passwdName); err != nil {
+		return err
+	}
+	return nil
+}
+
+func HandleListCategories(pm *PasswordManager) {
+	fmt.Println(pm.ListCategories())
+}
+
+func HandleGetPasswordStats(pm *PasswordManager) {
+	fmt.Println(pm.GetPasswordStats())
+}
+
+func FindDuplicatePasswords(pm *PasswordManager) {
+	fmt.Println(pm.FindDuplicatePasswords())
+}
+
+func main() {
+	pm := NewPasswordManager("ps.dat")
+	fmt.Print("Enter master key: ")
+	masterKey, err := readPassword()
+	if err != nil {
+		showError(err.Error())
+		return
+	}
+	err = pm.SetMasterPassword(masterKey)
+	if err != nil {
+		showError(err.Error())
+		return
+	}
+	showSuccess("Password manager initialized successfully")
+
+	err = pm.LoadFromFile()
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		showError(err.Error())
+		return
+	}
+
+	for {
+		ShowMainMenu()
+		input := ReadUserInput("Enter your choice:")
+		switch input {
+		case "1":
+			if err := HandlePasswordGeneration(pm); err != nil {
+				showError(err.Error())
+			}
+		case "2":
+			if err := HandlePasswordAdd(pm); err != nil {
+				showError(err.Error())
+			}
+		case "3":
+			if err := HandlePasswordSearch(pm); err != nil {
+				showError(err.Error())
+			}
+		case "4":
+			HandleListPasswords(pm)
+		case "5":
+			if err := HandlePasswordUpdate(pm); err != nil {
+				showError(err.Error())
+			}
+		case "6":
+			if err := HandleDeletePassword(pm); err != nil {
+				showError(err.Error())
+			}
+		case "7":
+			HandleListCategories(pm)
+		case "8":
+			HandleGetPasswordStats(pm)
+		case "9":
+			FindDuplicatePasswords(pm)
+		case "0":
+			if err := HandleExitAndSave(pm); err != nil {
+				showError(err.Error())
+			}
+			return
+		}
+	}
 }
